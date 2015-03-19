@@ -18,6 +18,7 @@
  */
 
 #include <vector>
+#include <map>
 #include "PairwiseComparison.h"
 
 using namespace std;
@@ -29,6 +30,29 @@ int main() {
 	rankings[1] = 20;
 	rankings[2] = 21;
 	rankings[3] = 3;
+	rankings[4] = 4;
+	rankings[5] = 6;
+	rankings[6] = 1;
+	rankings[7] = 2;
+	rankings[8] = 5;
+	rankings[9] = 22;
+	rankings[10] = 23;
+	rankings[11] = 24;
+	rankings[12] = 10;
+	rankings[13] = 11;
+	rankings[14] = 12;
+	rankings[15] = 7;
+	rankings[16] = 8;
+	rankings[17] = 9;
+	rankings[18] = 25;
+	rankings[19] = 26;
+	rankings[20] = 27;
+	rankings[21] = 16;
+	rankings[22] = 17;
+	rankings[23] = 18;
+	rankings[24] = 13;
+	rankings[25] = 14;
+	rankings[26] = 15;
 
 	// featureベクトル
 	vector<vector<float> > features(27, vector<float>(3));
@@ -48,7 +72,7 @@ int main() {
 	for (int i = 0; i < 3; ++i) {
 		for (int j = 0; j < 3; ++j) {
 			for (int k = 0; k < 3; ++k) {
-				int index = i * 9 + j * 3 + k;
+				int index1 = i * 9 + j * 3 + k;
 				vector<float> feature1(3);
 				feature1[0] = val[i];
 				feature1[1] = val[j];
@@ -58,12 +82,14 @@ int main() {
 					for (int j2 = 0; j2 < 3; ++j2) {
 						for (int k2 = 0; k2 < 3; ++k2) {
 							int index2 = i2 * 9 + j2 * 3 + k2;
+							if (index1 >= index2) continue;
+
 							vector<float> feature2(3);
 							feature2[0] = val[i2];
 							feature2[1] = val[j2];
 							feature2[2] = val[k2];
 
-							int choice = rankings[index] < rankings[index2] ? 1 : 0;
+							int choice = rankings[index1] < rankings[index2] ? 1 : 0;
 							comparisons.push_back(make_pair(choice, make_pair(feature1, feature2)));
 						}
 					}
@@ -72,7 +98,37 @@ int main() {
 		}
 	}
 
-	vector<float> preferences = PairwiseComparison::computePreferences(comparisons);
+	vector<float> preferences = PairwiseComparison::computePreferences(comparisons, 1000);
+
+	// ランキングの答え合わせ
+	map<float, int> scores;
+	int correct = 0;
+	int incorrect = 0;
+	for (int i = 0; i < 3; ++i) {
+		for (int j = 0; j < 3; ++j) {
+			for (int k = 0; k < 3; ++k) {
+				int index = i * 9 + j * 3 + k;
+				vector<float> feature1(3);
+				feature1[0] = val[i];
+				feature1[1] = val[j];
+				feature1[2] = val[k];
+				float score = PairwiseComparison::dot(preferences, feature1);
+				scores[score] = index;
+			}
+		}
+	}
+
+	vector<int> ranking_estimates(27);
+	int rank = 27;
+	for (auto it = scores.begin(); it != scores.end(); ++it) {
+		int id = it->second;
+		ranking_estimates[id] = rank;
+		rank--;
+	}
+
+	for (int i = 0; i < ranking_estimates.size(); ++i) {
+		printf("%d\n", ranking_estimates[i]);
+	}
 
 	return 0;
 }
