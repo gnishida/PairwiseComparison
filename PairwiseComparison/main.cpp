@@ -137,6 +137,63 @@ void checkEstimations(vector<int>& rankings, vector<vector<float> >& features, v
 	cout << "Accuracy: " << (float)correct / (correct + incorrect) << endl;
 }
 
+double dist(vector<float>& a, vector<float>& b) {
+	double l = 0.0;
+	for (int i = 0; i < a.size(); ++i) {
+		l += (a[i] - b[i]) * (a[i] - b[i]);
+	}
+	return sqrt(l);
+}
+
+/**
+ * Active ranking using pairwise comparisonsの論文に基づき、
+ * No.1アイテムからの距離でスコアを決定する。
+ */
+void testDistBasedScoring(vector<int>& rankings, vector<vector<float> >& features) {
+	// No.1アイテムのfeatureベクトルを探す
+	vector<float> best_feature;
+	for (int i = 0; i < rankings.size(); ++i) {
+		if (rankings[i] == 1) {
+			best_feature = features[i];
+		}
+	}
+
+	int correct = 0;
+	int incorrect = 0;
+
+	for (int i = 0; i < rankings.size(); ++i) {
+		float dist1 = dist(best_feature, features[i]);
+
+		for (int j = i + 1; j < rankings.size(); ++j) {
+			float dist2 = dist(best_feature, features[j]);
+
+			int choice = rankings[i] < rankings[j] ? 1 : 0;
+			int choice2 = dist1 < dist2 ? 1 : 0;
+			if (choice == choice2) {
+				correct++;
+			} else {
+				incorrect++;
+			}
+		}
+	}
+
+	cout << "Accuracy: " << (float)correct / (correct + incorrect) << endl;
+
+	// ランキングー距離の関係
+	vector<float> dists(27);
+	for (int i = 0; i < features.size(); ++i) {
+		float d = dist(best_feature, features[i]);
+		dists[rankings[i] - 1] = d;
+	}
+
+	// 結果をファイルに書き込む
+	FILE* fp = fopen("dists.txt", "w");
+	for (int i = 0; i < 27; ++i) {
+		fprintf(fp, "%lf\n", dists[i]);
+	}
+	fclose(fp);
+}
+
 int main() {
 	// ランキングの答え
 	vector<int> rankings(27);
@@ -175,6 +232,10 @@ int main() {
 
 	// pairwise comparisonsを作成する
 	auto comparisons = generatePairwiseComparisons(rankings, features);
+
+#if 0
+	testDistBasedScoring(rankings, features);
+#endif
 
 	// preferenceベクトルを推定する
 	vector<float> preference = PairwiseComparison::computePreferences(comparisons, 10000, false, 0.1, 0.002, 0.00001);
