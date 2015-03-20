@@ -12,11 +12,15 @@
  * 上の仮説が合っていれば、得られたpreferenceベクトルとfeatureベクトルの内積が、
  * pairwise comparisonの結果とほぼ一致するはずだ。
  *
+ * 結果：
+ * [0.571667, -0.808937, 0.137177]
+ *
  * @authro	Gen Nishida
  * @date	3/19/2015
  * @version	1.0
  */
 
+#include <iostream>
 #include <vector>
 #include <map>
 #include "PairwiseComparison.h"
