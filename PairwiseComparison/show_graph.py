@@ -10,9 +10,13 @@ while True:
 	scores.append(float(line))
 	
 
-x = range(0, 27)
-print(x)
-print(scores)
+x = range(1, 28)
 
 plt.plot(x, scores, "o")
+plt.title("Ranking estimation")
+plt.xlabel("Ranking")
+plt.ylabel("estimated score")
+plt.xlim(1, 27)
 
+plt.savefig("scores.png")
+plt.show()

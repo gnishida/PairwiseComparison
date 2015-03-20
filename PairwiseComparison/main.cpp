@@ -54,20 +54,8 @@ int main() {
 	rankings[25] = 14;
 	rankings[26] = 15;
 
-	// featureベクトル
-	vector<vector<float> > features(27, vector<float>(3));
-	features[0][0] = 1.0f; features[0][1] = 1.0f; features[0][2] = 1.0f;
-	features[1][0] = 1.0f; features[1][1] = 1.0f; features[1][2] = 0.5f;
-	features[2][0] = 1.0f; features[2][1] = 1.0f; features[2][2] = 0.1f;
-	features[3][0] = 1.0f; features[3][1] = 0.5f; features[3][2] = 1.0f;
-	features[4][0] = 1.0f; features[4][1] = 0.5f; features[4][2] = 0.5f;
-	features[5][0] = 1.0f; features[5][1] = 0.5f; features[2][2] = 0.1f;
-	features[6][0] = 1.0f; features[6][1] = 0.1f; features[6][2] = 1.0f;
-	features[7][0] = 1.0f; features[7][1] = 0.1f; features[7][2] = 0.5f;
-	features[8][0] = 1.0f; features[8][1] = 0.1f; features[8][2] = 0.1f;
-
 	// 総当りのpairwise comparisonsを作成する
-	float val[3] = {1.0f, 0.5f, 0.1f};
+	float val[3] = {1.0f, 0.5f, 0.0f};
 	vector<pair<int, pair<vector<float>, vector<float> > > > comparisons;
 	for (int i = 0; i < 3; ++i) {
 		for (int j = 0; j < 3; ++j) {
@@ -98,12 +86,16 @@ int main() {
 		}
 	}
 
-	vector<float> preferences = PairwiseComparison::computePreferences(comparisons, 1000);
+	// preferenceベクトルを推定する
+	vector<float> preferences = PairwiseComparison::computePreferences(comparisons, 10000, false, 0.1, 0.002, 0.00001);
+	cout << "Preference: " << endl;
+	for (int i = 0; i < preferences.size(); ++i) {
+		cout << preferences[i] << ",";
+	}
+	cout << endl;
 
 	// ランキングの答え合わせ
-	map<float, int> scores;
-	int correct = 0;
-	int incorrect = 0;
+	vector<float> scores(27);
 	for (int i = 0; i < 3; ++i) {
 		for (int j = 0; j < 3; ++j) {
 			for (int k = 0; k < 3; ++k) {
@@ -113,22 +105,18 @@ int main() {
 				feature1[1] = val[j];
 				feature1[2] = val[k];
 				float score = PairwiseComparison::dot(preferences, feature1);
-				scores[score] = index;
+
+				scores[rankings[index] - 1] = score;
 			}
 		}
 	}
 
-	vector<int> ranking_estimates(27);
-	int rank = 27;
-	for (auto it = scores.begin(); it != scores.end(); ++it) {
-		int id = it->second;
-		ranking_estimates[id] = rank;
-		rank--;
+	// 結果をファイルに書き込む
+	FILE* fp = fopen("scores.txt", "w");
+	for (int i = 0; i < 27; ++i) {
+		fprintf(fp, "%lf\n", scores[i]);
 	}
-
-	for (int i = 0; i < ranking_estimates.size(); ++i) {
-		printf("%d\n", ranking_estimates[i]);
-	}
+	fclose(fp);
 
 	return 0;
 }

@@ -9,7 +9,7 @@ protected:
 	PairwiseComparison() {}
 
 public:
-	static vector<float> computePreferences(vector<pair<int, pair<vector<float>, vector<float> > > >& comparisons, int maxIterations);
+	static vector<float> computePreferences(vector<pair<int, pair<vector<float>, vector<float> > > >& comparisons, int maxIterations, bool l1, float lambda, float eta, float threshold);
 	static float dot(vector<float> w, vector<float> f);
 
 private:

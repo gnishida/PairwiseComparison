@@ -8,7 +8,7 @@
  * @param comparisons	[comparison ID]<選択したオプション(0/1), <オプション1のfeature, オプション2のfeature> >
  * @return				ユーザのpreferenceベクトル
  */
-vector<float> PairwiseComparison::computePreferences(vector<pair<int, pair<vector<float>, vector<float> > > >& comparisons, int maxIterations) {
+vector<float> PairwiseComparison::computePreferences(vector<pair<int, pair<vector<float>, vector<float> > > >& comparisons, int maxIterations, bool l1, float lambda, float eta, float threshold) {
 	assert(comparisons.size() > 0);
 
 	// 次元数
@@ -18,7 +18,7 @@ vector<float> PairwiseComparison::computePreferences(vector<pair<int, pair<vecto
 	vector<float> preferences(d, 1.0f / (float)d);
 
 	// Gradient descenntにより、preferenceベクトルを推定する
-	gradientDescent(preferences, comparisons, maxIterations, false, 0.0, 0.001, 0.0001);
+	gradientDescent(preferences, comparisons, maxIterations, l1, lambda, eta, threshold);
 		
 	return preferences;
 }
