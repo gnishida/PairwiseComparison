@@ -27,6 +27,116 @@
 
 using namespace std;
 
+/**
+ * featureベクトルをlinear kernelを使って生成する。
+ *
+ * @return	linear kernelのfeatureベクトル
+ */
+vector<vector<float> > generateFeatureVectors() {
+	float val[3] = {1.0f, 0.5f, 0.0f};
+	vector<vector<float> > features(27, vector<float>(3));
+	for (int i = 0; i < 3; ++i) {
+		for (int j = 0; j < 3; ++j) {
+			for (int k = 0; k < 3; ++k) {
+				features[i * 9 + j * 3 + k][0] = val[i];
+				features[i * 9 + j * 3 + k][1] = val[j];
+				features[i * 9 + j * 3 + k][2] = val[k];
+			}
+		}
+	}
+
+	return features;
+}
+
+/**
+ * featureベクトルをquadratic kernelを使って生成する。
+ *
+ * @return	quadratic kernelのfeatureベクトル
+ */
+vector<vector<float> > generateFeatureVectorsByQuadraticKernel() {
+	float val[3] = {1.0f, 0.5f, 0.0f};
+	vector<vector<float> > features(27, vector<float>(6));
+	for (int i = 0; i < 3; ++i) {
+		for (int j = 0; j < 3; ++j) {
+			for (int k = 0; k < 3; ++k) {
+				features[i * 9 + j * 3 + k][0] = val[i] * val[i];
+				features[i * 9 + j * 3 + k][1] = val[j] * val[j];
+				features[i * 9 + j * 3 + k][2] = val[k] * val[k];
+				features[i * 9 + j * 3 + k][3] = val[i] * val[j] * sqrt(2.0);
+				features[i * 9 + j * 3 + k][4] = val[j] * val[k] * sqrt(2.0);
+				features[i * 9 + j * 3 + k][5] = val[k] * val[i] * sqrt(2.0);
+			}
+		}
+	}
+
+	return features;
+}
+
+/**
+ * featureベクトルをちょっと違うquadratic kernelを使って生成する。
+ *
+ * @return	quadratic kernelのfeatureベクトル
+ */
+vector<vector<float> > generateFeatureVectorsByQuadraticKernel2() {
+	float val[3] = {1.0f, 0.5f, 0.0f};
+	vector<vector<float> > features(27, vector<float>(6));
+	for (int i = 0; i < 3; ++i) {
+		for (int j = 0; j < 3; ++j) {
+			for (int k = 0; k < 3; ++k) {
+				features[i * 9 + j * 3 + k][0] = val[i] * val[i];
+				features[i * 9 + j * 3 + k][1] = val[j] * val[j];
+				features[i * 9 + j * 3 + k][2] = val[k] * val[k];
+				features[i * 9 + j * 3 + k][3] = val[i] * val[i];
+				features[i * 9 + j * 3 + k][4] = val[j] * val[j];
+				features[i * 9 + j * 3 + k][5] = val[k] * val[k];
+			}
+		}
+	}
+
+	return features;
+}
+
+/**
+ * 指定されたfeatureベクトルについて、総当りのpairwise comparisonsを作成する
+ *
+ * @param rankings		各アイテムのランキング
+ * @param features		各アイテムのfeatureベクトル
+ * @return				pairwise comparisons
+ */
+vector<pair<int, pair<vector<float>, vector<float> > > > generatePairwiseComparisons(vector<int>& rankings, vector<vector<float> >& features) {
+	vector<pair<int, pair<vector<float>, vector<float> > > > comparisons;
+	for (int i = 0; i < rankings.size(); ++i) {
+		for (int j = i + 1; j < rankings.size(); ++j) {
+			int choice = rankings[i] < rankings[j] ? 1 : 0;
+			comparisons.push_back(make_pair(choice, make_pair(features[i], features[j])));
+		}
+	}
+
+	return comparisons;
+}
+
+void checkEstimations(vector<int>& rankings, vector<vector<float> >& features, vector<float>& preference) {
+	int correct = 0;
+	int incorrect = 0;
+
+	for (int i = 0; i < rankings.size(); ++i) {
+		float score1 = PairwiseComparison::dot(preference, features[i]);
+		for (int j = i + 1; j < rankings.size(); ++j) {
+			float score2 = PairwiseComparison::dot(preference, features[j]);
+
+			int choice = rankings[i] < rankings[j] ? 1 : 0;
+			int choice2 = score1 > score2 ? 1 : 0;
+			if (choice == choice2) {
+				correct++;
+			} else {
+				incorrect++;
+			}
+		}
+	}
+
+	cout << "Accuracy: " << (float)correct / (correct + incorrect) << endl;
+}
+
 int main() {
 	// ランキングの答え
 	vector<int> rankings(27);
@@ -58,61 +168,30 @@ int main() {
 	rankings[25] = 14;
 	rankings[26] = 15;
 
-	// 総当りのpairwise comparisonsを作成する
-	float val[3] = {1.0f, 0.5f, 0.0f};
-	vector<pair<int, pair<vector<float>, vector<float> > > > comparisons;
-	for (int i = 0; i < 3; ++i) {
-		for (int j = 0; j < 3; ++j) {
-			for (int k = 0; k < 3; ++k) {
-				int index1 = i * 9 + j * 3 + k;
-				vector<float> feature1(3);
-				feature1[0] = val[i];
-				feature1[1] = val[j];
-				feature1[2] = val[k];
+	// featureベクトルを計算する
+	auto features = generateFeatureVectors();
+	//auto features = generateFeatureVectorsByQuadraticKernel();
+	//auto features = generateFeatureVectorsByQuadraticKernel2();
 
-				for (int i2 = 0; i2 < 3; ++i2) {
-					for (int j2 = 0; j2 < 3; ++j2) {
-						for (int k2 = 0; k2 < 3; ++k2) {
-							int index2 = i2 * 9 + j2 * 3 + k2;
-							if (index1 >= index2) continue;
-
-							vector<float> feature2(3);
-							feature2[0] = val[i2];
-							feature2[1] = val[j2];
-							feature2[2] = val[k2];
-
-							int choice = rankings[index1] < rankings[index2] ? 1 : 0;
-							comparisons.push_back(make_pair(choice, make_pair(feature1, feature2)));
-						}
-					}
-				}
-			}
-		}
-	}
+	// pairwise comparisonsを作成する
+	auto comparisons = generatePairwiseComparisons(rankings, features);
 
 	// preferenceベクトルを推定する
-	vector<float> preferences = PairwiseComparison::computePreferences(comparisons, 10000, false, 0.1, 0.002, 0.00001);
+	vector<float> preference = PairwiseComparison::computePreferences(comparisons, 10000, false, 0.1, 0.002, 0.00001);
 	cout << "Preference: " << endl;
-	for (int i = 0; i < preferences.size(); ++i) {
-		cout << preferences[i] << ",";
+	for (int i = 0; i < preference.size(); ++i) {
+		cout << preference[i] << ",";
 	}
 	cout << endl;
 
-	// ランキングの答え合わせ
-	vector<float> scores(27);
-	for (int i = 0; i < 3; ++i) {
-		for (int j = 0; j < 3; ++j) {
-			for (int k = 0; k < 3; ++k) {
-				int index = i * 9 + j * 3 + k;
-				vector<float> feature1(3);
-				feature1[0] = val[i];
-				feature1[1] = val[j];
-				feature1[2] = val[k];
-				float score = PairwiseComparison::dot(preferences, feature1);
+	// pairwise comparisonsの答え合わせ
+	checkEstimations(rankings, features, preference);
 
-				scores[rankings[index] - 1] = score;
-			}
-		}
+	// ランキングースコアの関係
+	vector<float> scores(27);
+	for (int i = 0; i < features.size(); ++i) {
+		float score = PairwiseComparison::dot(preference, features[i]);
+		scores[rankings[i] - 1] = score;
 	}
 
 	// 結果をファイルに書き込む
