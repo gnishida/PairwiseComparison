@@ -11,9 +11,11 @@
  * その結果から、gradient descentでユーザのpreferenceベクトルを求める。
  * 上の仮説が合っていれば、得られたpreferenceベクトルとfeatureベクトルの内積が、
  * pairwise comparisonの結果とほぼ一致するはずだ。
+ * ★ Kendall tau距離は、0であれば完全一致、1なら完全不一致。つまり、小さい方が良い。
  *
  * 結果：
  * [0.571667, -0.808937, 0.137177]
+ * Kendall tau: 0.0826211
  *
  * @authro	Gen Nishida
  * @date	3/19/2015
@@ -168,36 +170,6 @@ int main() {
 			&ranking[18], &ranking[19], &ranking[20], &ranking[21], &ranking[22], &ranking[23], &ranking[24], &ranking[25], &ranking[26]);
 		rankings.push_back(ranking);
 	}
-	/*
-	vector<int> rankings(27);
-	rankings[0] = 19;
-	rankings[1] = 20;
-	rankings[2] = 21;
-	rankings[3] = 3;
-	rankings[4] = 4;
-	rankings[5] = 6;
-	rankings[6] = 1;
-	rankings[7] = 2;
-	rankings[8] = 5;
-	rankings[9] = 22;
-	rankings[10] = 23;
-	rankings[11] = 24;
-	rankings[12] = 10;
-	rankings[13] = 11;
-	rankings[14] = 12;
-	rankings[15] = 7;
-	rankings[16] = 8;
-	rankings[17] = 9;
-	rankings[18] = 25;
-	rankings[19] = 26;
-	rankings[20] = 27;
-	rankings[21] = 16;
-	rankings[22] = 17;
-	rankings[23] = 18;
-	rankings[24] = 13;
-	rankings[25] = 14;
-	rankings[26] = 15;
-	*/
 
 	// featureベクトルを計算する
 	auto features = generateFeatureVectors();

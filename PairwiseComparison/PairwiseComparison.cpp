@@ -88,7 +88,7 @@ void PairwiseComparison::gradientDescent(vector<float>& w, vector<pair<int, pair
 	}
 }
 
-float PairwiseComparison::negativeLogLikelihood(vector<pair<int, pair<vector<float>, vector<float> > > >& comparisons, vector<float> w, bool l1, float lambda) {
+float PairwiseComparison::negativeLogLikelihood(vector<pair<int, pair<vector<float>, vector<float> > > >& comparisons, const vector<float>& w, bool l1, float lambda) {
 	//int numFeatures = features[0].first.size();
 	int numComponents = comparisons[0].second.first.size();
 

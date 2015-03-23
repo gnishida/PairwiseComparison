@@ -89,7 +89,7 @@ void PairwiseComparison2::gradientDescent(vector<float>& w, vector<pair<int, pai
 	}
 }
 
-float PairwiseComparison2::negativeLogLikelihood(vector<pair<int, pair<vector<float>, vector<float> > > >& comparisons, vector<float> w, bool l1, float lambda) {
+float PairwiseComparison2::negativeLogLikelihood(vector<pair<int, pair<vector<float>, vector<float> > > >& comparisons, const vector<float>& w, bool l1, float lambda) {
 	//int numFeatures = features[0].first.size();
 	int numComponents = comparisons[0].second.first.size();
 
@@ -110,7 +110,7 @@ float PairwiseComparison2::negativeLogLikelihood(vector<pair<int, pair<vector<fl
 	return E;
 }
 
-float PairwiseComparison2::distance(vector<float> w, vector<float> f) {
+float PairwiseComparison2::distance(const vector<float>& w, const vector<float>& f) {
 	float ret = 0.0f;
 
 	for (int i = 0; i < w.size(); ++i) {
@@ -120,7 +120,7 @@ float PairwiseComparison2::distance(vector<float> w, vector<float> f) {
 	return ret;
 }
 
-float PairwiseComparison2::dot(vector<float> w, vector<float> f) {
+float PairwiseComparison2::dot(const vector<float>& w, const vector<float>& f) {
 	float ret = 0.0f;
 	for (int i = 0; i < w.size(); ++i) {
 		ret += w[i] * f[i];

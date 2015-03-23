@@ -25,8 +25,8 @@ public:
 
 private:
 	static void gradientDescent(vector<float>& w, vector<pair<int, pair<vector<float>, vector<float> > > >& comparisons, int maxIterations, bool l1, float lambda, float eta, float threshold, bool normalize = true);
-	static float negativeLogLikelihood(vector<pair<int, pair<vector<float>, vector<float> > > >& comparisons, vector<float> w, bool l1, float lambda);
-	static float distance(vector<float> w, vector<float> f);
-	static float dot(vector<float> w, vector<float> f);
+	static float negativeLogLikelihood(vector<pair<int, pair<vector<float>, vector<float> > > >& comparisons, const vector<float>& w, bool l1, float lambda);
+	static float distance(const vector<float>& w, const vector<float>& f);
+	static float dot(const vector<float>& w, const vector<float>& f);
 };
 
