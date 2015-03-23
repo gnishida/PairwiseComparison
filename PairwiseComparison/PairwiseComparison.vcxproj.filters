@@ -18,18 +18,18 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GradientDescent.cpp">
+    <ClCompile Include="PairwiseComparison.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="PairwiseComparison.cpp">
+    <ClCompile Include="PairwiseComparison2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="GradientDescent.h">
+    <ClInclude Include="PairwiseComparison.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="PairwiseComparison.h">
+    <ClInclude Include="PairwiseComparison2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

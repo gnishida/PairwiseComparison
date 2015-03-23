@@ -24,6 +24,7 @@
 #include <vector>
 #include <map>
 #include "PairwiseComparison.h"
+#include "PairwiseComparison2.h"
 
 using namespace std;
 
@@ -238,7 +239,7 @@ int main() {
 #endif
 
 	// preferenceベクトルを推定する
-	vector<float> preference = PairwiseComparison::computePreferences(comparisons, 10000, false, 0.1, 0.002, 0.00001);
+	vector<float> preference = PairwiseComparison2::computePreferences(comparisons, 10000, false, 0.0, 0.002, 0.00001);
 	cout << "Preference: " << endl;
 	for (int i = 0; i < preference.size(); ++i) {
 		cout << preference[i] << ",";

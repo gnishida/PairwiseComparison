@@ -1,4 +1,4 @@
-﻿#include "PairwiseComparison.h"
+﻿#include "PairwiseComparison2.h"
 #include <assert.h>
 
 /**
@@ -7,7 +7,7 @@
  * @param comparisons	[comparison ID]<選択したオプション(0/1), <オプション1のfeature, オプション2のfeature> >
  * @return				ユーザのpreferenceベクトル
  */
-vector<float> PairwiseComparison::computePreferences(vector<pair<int, pair<vector<float>, vector<float> > > >& comparisons, int maxIterations, bool l1, float lambda, float eta, float threshold) {
+vector<float> PairwiseComparison2::computePreferences(vector<pair<int, pair<vector<float>, vector<float> > > >& comparisons, int maxIterations, bool l1, float lambda, float eta, float threshold) {
 	assert(comparisons.size() > 0);
 
 	// 次元数
@@ -35,32 +35,33 @@ vector<float> PairwiseComparison::computePreferences(vector<pair<int, pair<vecto
  * @eta				学習速度
  * @threshold		収束しきい値
  */
-void PairwiseComparison::gradientDescent(vector<float>& w, vector<pair<int, pair<vector<float>, vector<float> > > >& comparisons, int maxIterations, bool l1, float lambda, float eta, float threshold, bool normalize) {
+void PairwiseComparison2::gradientDescent(vector<float>& w, vector<pair<int, pair<vector<float>, vector<float> > > >& comparisons, int maxIterations, bool l1, float lambda, float eta, float threshold, bool normalize) {
 	//int numFeatures = features[0].first.size();
 	int numComponents = comparisons[0].second.first.size();
 
 	float curE = negativeLogLikelihood(comparisons, w, l1, lambda);
 	for (int iter = 0; iter < maxIterations; ++iter) {
-		std::vector<float> dw(numComponents, 0.0f);
+		//std::vector<float> dw(numComponents, 0.0f);
+		std::vector<float> dw2(numComponents, 0.0f);
 
 		for (int d = 0; d < comparisons.size(); ++d) {
-			float e = expf(dot(w, comparisons[d].second.second) - dot(w, comparisons[d].second.first));
+			float e = expf(distance(w, comparisons[d].second.first) - distance(w, comparisons[d].second.second));
 			float a = comparisons[d].first - 1.0f / (1.0f + e);
 			
 			for (int k = 0; k < numComponents; ++k) {
-				dw[k] += (comparisons[d].second.second[k] - comparisons[d].second.first[k]) * a;
+				dw2[k] += -2.0 * (comparisons[d].second.first[k] - comparisons[d].second.second[k]) * a;
 			}
 		}
-
+		
 		for (int k = 0; k < numComponents; ++k) {
 			if (l1) {
 				if (w[k] >= 0) {
-					w[k] -= eta * (lambda + dw[k]);
+					w[k] -= eta * (lambda + dw2[k]);
 				} else {
-					w[k] -= eta * (-lambda + dw[k]);
+					w[k] -= eta * (-lambda + dw2[k]);
 				}
 			} else {
-				w[k] -= eta * (lambda * w[k] + dw[k]);
+				w[k] -= eta * (lambda * w[k] + dw2[k]);
 			}
 		}
 
@@ -78,13 +79,13 @@ void PairwiseComparison::gradientDescent(vector<float>& w, vector<pair<int, pair
 	}
 }
 
-float PairwiseComparison::negativeLogLikelihood(vector<pair<int, pair<vector<float>, vector<float> > > >& comparisons, vector<float> w, bool l1, float lambda) {
+float PairwiseComparison2::negativeLogLikelihood(vector<pair<int, pair<vector<float>, vector<float> > > >& comparisons, vector<float> w, bool l1, float lambda) {
 	//int numFeatures = features[0].first.size();
 	int numComponents = comparisons[0].second.first.size();
 
 	float E = 0.0f;
 	for (int d = 0; d < comparisons.size(); ++d) {
-		float diff = dot(w, comparisons[d].second.second) - dot(w, comparisons[d].second.first);
+		float diff = distance(w, comparisons[d].second.first) - distance(w, comparisons[d].second.second);
 		E += logf(1.0f + expf(diff)) + (comparisons[d].first - 1.0f) * diff;
 	}
 
@@ -93,13 +94,23 @@ float PairwiseComparison::negativeLogLikelihood(vector<pair<int, pair<vector<flo
 			E += fabs(w[k]) * lambda;
 		}
 	} else {
-		E += dot(w, w) * lambda / 2.0f;
+		E += distance(w, w) * lambda / 2.0f;
 	}
 
 	return E;
 }
 
-float PairwiseComparison::dot(vector<float> w, vector<float> f) {
+float PairwiseComparison2::distance(vector<float> w, vector<float> f) {
+	float ret = 0.0f;
+
+	for (int i = 0; i < w.size(); ++i) {
+		ret += (w[i] - f[i]) * (w[i] - f[i]);
+	}
+
+	return ret;
+}
+
+float PairwiseComparison2::dot(vector<float> w, vector<float> f) {
 	float ret = 0.0f;
 	for (int i = 0; i < w.size(); ++i) {
 		ret += w[i] * f[i];

@@ -69,6 +69,7 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -113,13 +114,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="GradientDescent.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="PairwiseComparison.cpp" />
+    <ClCompile Include="PairwiseComparison2.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="GradientDescent.h" />
     <ClInclude Include="PairwiseComparison.h" />
+    <ClInclude Include="PairwiseComparison2.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
