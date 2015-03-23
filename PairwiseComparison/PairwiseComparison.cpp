@@ -22,6 +22,16 @@ vector<float> PairwiseComparison::computePreferences(vector<pair<int, pair<vecto
 	return preferences;
 }
 
+/**
+ * アイテムのスコアを返却する。
+ *
+ * @param w		ユーザpreferenceベクトル
+ * @param f		アイテムのfeatureベクトル
+ * @return		アイテムのスコア
+ */
+float PairwiseComparison::score(const vector<float>& w, const vector<float>& f) {
+	return dot(w, f);
+}
 
 /**
  * Run gradient descent
@@ -99,7 +109,7 @@ float PairwiseComparison::negativeLogLikelihood(vector<pair<int, pair<vector<flo
 	return E;
 }
 
-float PairwiseComparison::dot(vector<float> w, vector<float> f) {
+float PairwiseComparison::dot(const vector<float>& w, const vector<float>& f) {
 	float ret = 0.0f;
 	for (int i = 0; i < w.size(); ++i) {
 		ret += w[i] * f[i];

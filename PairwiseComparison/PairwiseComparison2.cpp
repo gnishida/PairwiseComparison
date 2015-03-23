@@ -22,6 +22,16 @@ vector<float> PairwiseComparison2::computePreferences(vector<pair<int, pair<vect
 	return preferences;
 }
 
+/**
+ * アイテムのスコアを返却する。
+ *
+ * @param w		ユーザpreferenceベクトル
+ * @param f		アイテムのfeatureベクトル
+ * @return		アイテムのスコア
+ */
+float PairwiseComparison2::score(const vector<float>& w, const vector<float>& f) {
+	return 1.0 / (1.0 + distance(w, f));
+}
 
 /**
  * Run gradient descent

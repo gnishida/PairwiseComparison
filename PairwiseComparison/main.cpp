@@ -24,7 +24,7 @@
 #include <vector>
 #include <map>
 #include "PairwiseComparison.h"
-#include "PairwiseComparison2.h"
+//#include "PairwiseComparison2.h"
 
 using namespace std;
 
@@ -116,14 +116,22 @@ vector<pair<int, pair<vector<float>, vector<float> > > > generatePairwiseCompari
 	return comparisons;
 }
 
+/**
+ * 予測結果を、Kendall tau距離を使って測定する。
+ * Kendall tau距離とは、全てのペアについて、ランキング上の上下をチェックし、#間違いペア / ペアの総数で求まる。
+ *
+ * @param rankings		ランキング
+ * @param features		featureベクトルのリスト
+ * @param preference	ユーザのpreferenceベクトル
+ */
 void checkEstimations(vector<int>& rankings, vector<vector<float> >& features, vector<float>& preference) {
 	int correct = 0;
 	int incorrect = 0;
 
 	for (int i = 0; i < rankings.size(); ++i) {
-		float score1 = PairwiseComparison::dot(preference, features[i]);
+		float score1 = PairwiseComparison::score(preference, features[i]);
 		for (int j = i + 1; j < rankings.size(); ++j) {
-			float score2 = PairwiseComparison::dot(preference, features[j]);
+			float score2 = PairwiseComparison::score(preference, features[j]);
 
 			int choice = rankings[i] < rankings[j] ? 1 : 0;
 			int choice2 = score1 > score2 ? 1 : 0;
@@ -135,7 +143,7 @@ void checkEstimations(vector<int>& rankings, vector<vector<float> >& features, v
 		}
 	}
 
-	cout << "Accuracy: " << (float)correct / (correct + incorrect) << endl;
+	cout << "Kendall tau: " << (float)incorrect / (correct + incorrect) << endl;
 }
 
 double dist(vector<float>& a, vector<float>& b) {
@@ -146,57 +154,21 @@ double dist(vector<float>& a, vector<float>& b) {
 	return sqrt(l);
 }
 
-/**
- * Active ranking using pairwise comparisonsの論文に基づき、
- * No.1アイテムからの距離でスコアを決定する。
- */
-void testDistBasedScoring(vector<int>& rankings, vector<vector<float> >& features) {
-	// No.1アイテムのfeatureベクトルを探す
-	vector<float> best_feature;
-	for (int i = 0; i < rankings.size(); ++i) {
-		if (rankings[i] == 1) {
-			best_feature = features[i];
-		}
-	}
-
-	int correct = 0;
-	int incorrect = 0;
-
-	for (int i = 0; i < rankings.size(); ++i) {
-		float dist1 = dist(best_feature, features[i]);
-
-		for (int j = i + 1; j < rankings.size(); ++j) {
-			float dist2 = dist(best_feature, features[j]);
-
-			int choice = rankings[i] < rankings[j] ? 1 : 0;
-			int choice2 = dist1 < dist2 ? 1 : 0;
-			if (choice == choice2) {
-				correct++;
-			} else {
-				incorrect++;
-			}
-		}
-	}
-
-	cout << "Accuracy: " << (float)correct / (correct + incorrect) << endl;
-
-	// ランキングー距離の関係
-	vector<float> dists(27);
-	for (int i = 0; i < features.size(); ++i) {
-		float d = dist(best_feature, features[i]);
-		dists[rankings[i] - 1] = d;
-	}
-
-	// 結果をファイルに書き込む
-	FILE* fp = fopen("dists.txt", "w");
-	for (int i = 0; i < 27; ++i) {
-		fprintf(fp, "%lf\n", dists[i]);
-	}
-	fclose(fp);
-}
-
 int main() {
 	// ランキングの答え
+	vector<vector<int> > rankings;
+	FILE* fp = fopen("comparisons.txt", "r");
+	while (true) {
+		vector<int> ranking(27);
+		char buff[256];
+		if (!fgets(buff, 256, fp)) break;
+		sscanf(buff, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d", 
+			&ranking[0], &ranking[1], &ranking[2], &ranking[3], &ranking[4], &ranking[5], &ranking[6], &ranking[7], &ranking[8], 
+			&ranking[9], &ranking[10], &ranking[11], &ranking[12], &ranking[13], &ranking[14], &ranking[15], &ranking[16], &ranking[17],
+			&ranking[18], &ranking[19], &ranking[20], &ranking[21], &ranking[22], &ranking[23], &ranking[24], &ranking[25], &ranking[26]);
+		rankings.push_back(ranking);
+	}
+	/*
 	vector<int> rankings(27);
 	rankings[0] = 19;
 	rankings[1] = 20;
@@ -225,6 +197,7 @@ int main() {
 	rankings[24] = 13;
 	rankings[25] = 14;
 	rankings[26] = 15;
+	*/
 
 	// featureベクトルを計算する
 	auto features = generateFeatureVectors();
@@ -232,36 +205,44 @@ int main() {
 	//auto features = generateFeatureVectorsByQuadraticKernel2();
 
 	// pairwise comparisonsを作成する
-	auto comparisons = generatePairwiseComparisons(rankings, features);
+	for (int u = 0; u < rankings.size(); ++u) {
+		auto comparisons = generatePairwiseComparisons(rankings[u], features);
 
-#if 0
-	testDistBasedScoring(rankings, features);
-#endif
+		// preferenceベクトルを推定する
+		vector<float> preference = PairwiseComparison::computePreferences(comparisons, 10000, false, 0.1, 0.002, 0.00001);
+		cout << "Preference: ";
+		for (int i = 0; i < preference.size(); ++i) {
+			cout << preference[i] << ",";
+		}
+		cout << endl;
 
-	// preferenceベクトルを推定する
-	vector<float> preference = PairwiseComparison2::computePreferences(comparisons, 10000, false, 0.0, 0.002, 0.00001);
-	cout << "Preference: " << endl;
-	for (int i = 0; i < preference.size(); ++i) {
-		cout << preference[i] << ",";
+		/*
+		// simple modelの場合、preferenceベクトルはとりあえずハードコーディング
+		vector<float> preference(3);
+		preference[0] = 0.2;
+		preference[1] = -0.4;
+		preference[2] = 0.1;
+		*/
+
+		// pairwise comparisonsの答え合わせ
+		checkEstimations(rankings[u], features, preference);
+
+		// ランキングースコアの関係
+		vector<float> scores(27);
+		for (int i = 0; i < features.size(); ++i) {
+			float s = PairwiseComparison::score(preference, features[i]);
+			scores[rankings[u][i] - 1] = s;
+		}
+
+		// 結果をファイルに書き込む
+		char filename[256];
+		sprintf(filename, "scores_%d.txt", u);
+		FILE* fp = fopen(filename, "w");
+		for (int i = 0; i < 27; ++i) {
+			fprintf(fp, "%lf\n", scores[i]);
+		}
+		fclose(fp);
 	}
-	cout << endl;
-
-	// pairwise comparisonsの答え合わせ
-	checkEstimations(rankings, features, preference);
-
-	// ランキングースコアの関係
-	vector<float> scores(27);
-	for (int i = 0; i < features.size(); ++i) {
-		float score = PairwiseComparison::dot(preference, features[i]);
-		scores[rankings[i] - 1] = score;
-	}
-
-	// 結果をファイルに書き込む
-	FILE* fp = fopen("scores.txt", "w");
-	for (int i = 0; i < 27; ++i) {
-		fprintf(fp, "%lf\n", scores[i]);
-	}
-	fclose(fp);
 
 	return 0;
 }
